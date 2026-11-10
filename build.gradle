@@ -31,12 +31,34 @@ dependencies {
 
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.4')
-    testImplementation 'org.testcontainers:postgresql'
-    testImplementation 'org.testcontainers:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+testing {
+    suites {
+        integrationTest(JvmTestSuite) {
+            useJUnitJupiter('5.11.4')
+            dependencies {
+                implementation project()
+                implementation platform('org.testcontainers:testcontainers-bom:1.21.4')
+                implementation 'org.testcontainers:postgresql'
+                implementation 'org.testcontainers:junit-jupiter'
+            }
+            targets {
+                all {
+                    testTask.configure {
+                        shouldRunAfter(test)
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn(testing.suites.integrationTest)
 }

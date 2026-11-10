@@ -9,6 +9,12 @@ public class BusinessValidationStage {
     }
 
     public EnrichedMeasurementEvent process(SensorMeasurementEvent event) {
-        return new EnrichedMeasurementEvent(event, outlierDetector.detect(event));
+        var sensors = event.sensors().stream()
+                .map(r -> new EnrichedSensorReading(r, MeasurementConversions.fahrenheit(r.celsius())))
+                .toList();
+        var moisture = event.moisture().stream()
+                .map(r -> new EnrichedMoistureReading(r, MeasurementConversions.expectedMoisturePercent(r.raw())))
+                .toList();
+        return new EnrichedMeasurementEvent(event, sensors, moisture, outlierDetector.detect(event));
     }
 }

@@ -25,4 +25,17 @@ class BusinessValidationStageTest {
         assertSame(event, enriched.event());
         assertEquals(List.of(Outlier.sensor(2, "temperature 104.0F is outside 0F-100F")), enriched.outliers());
     }
+
+    @Test
+    void addsFahrenheitAndExpectedMoisturePercentMetadata() {
+        var sensor = new SensorReading(0, "2800000000000001", 18.06);
+        var probe = new MoistureReading(0, 35, 1879, 83);
+        var event = new SensorMeasurementEvent("vermiculture-esp32", List.of(sensor), List.of(probe), null,
+                OffsetDateTime.parse("2026-11-09T11:56:34-08:00"));
+
+        var enriched = stage.process(event);
+
+        assertEquals(List.of(new EnrichedSensorReading(sensor, 64.5)), enriched.sensors());
+        assertEquals(List.of(new EnrichedMoistureReading(probe, 83)), enriched.moisture());
+    }
 }
