@@ -12,6 +12,7 @@ import java.util.List;
 public final class Main {
 
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
+    private static final String DEFAULT_CALIBRATION_RESOURCE = "moisture-calibration.json";
 
     private Main() {
     }
@@ -25,6 +26,7 @@ public final class Main {
         var dbUrl = env("DB_URL", "jdbc:postgresql://localhost:5432/sensors");
         var dbUser = env("DB_USER", "sensors");
         var dbPassword = env("DB_PASSWORD", "sensors");
+        var calibrations = moistureCalibrations();
         LOG.info("Starting sensor-measurement-service: bootstrapServers={}, groupId={}, topic={}, deadLetterTopic={}, failuresFile={}, dbUrl={}",
                 bootstrapServers, groupId, topic, deadLetterTopic, failuresFile.toAbsolutePath(), dbUrl);
 
@@ -39,7 +41,7 @@ public final class Main {
                 deadLetterTopic,
                 new FileDeadLetterFailureHandler(failuresFile),
                 new StructuralValidationStage(new SensorEventParser(), new StructuralValidator()),
-                new BusinessValidationStage(new OutlierDetector()),
+                new BusinessValidationStage(calibrations),
                 new RetryingMeasurementWriter(
                         new TimescaleMeasurementWriter(dbUrl, dbUser, dbPassword),
                         6, Duration.ofSeconds(1), Duration.ofSeconds(30), Thread::sleep));
@@ -62,6 +64,20 @@ public final class Main {
             LOG.info("Consumer loop stopped; closing Kafka clients");
         }
         LOG.info("sensor-measurement-service stopped");
+    }
+
+    private static MoistureCalibrations moistureCalibrations() {
+        var file = System.getenv("MOISTURE_CALIBRATION_FILE");
+        if (file != null && !file.isBlank()) {
+            var calibrations = MoistureCalibrationLoader.load(Path.of(file));
+            LOG.info("Moisture calibration loaded from {}: default={}, perProbe={}",
+                    Path.of(file).toAbsolutePath(), calibrations.defaultCalibration(), calibrations.byDeviceAndProbe());
+            return calibrations;
+        }
+        var calibrations = MoistureCalibrationLoader.loadResource(DEFAULT_CALIBRATION_RESOURCE);
+        LOG.info("Moisture calibration loaded from classpath {}: default={}, perProbe={}",
+                DEFAULT_CALIBRATION_RESOURCE, calibrations.defaultCalibration(), calibrations.byDeviceAndProbe());
+        return calibrations;
     }
 
     private static String env(String name, String defaultValue) {

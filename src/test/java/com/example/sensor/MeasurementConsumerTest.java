@@ -48,7 +48,7 @@ class MeasurementConsumerTest {
     private MeasurementConsumer consumerWith(MockProducer<String, String> producer, MeasurementWriter writer) {
         return new MeasurementConsumer(kafka, producer, DLQ_TOPIC, recordingHandler,
                 new StructuralValidationStage(new SensorEventParser(), new StructuralValidator()),
-                new BusinessValidationStage(new OutlierDetector()),
+                new BusinessValidationStage(MoistureCalibrations.defaultOnly(new MoistureCalibration(3500, 1550))),
                 writer);
     }
 

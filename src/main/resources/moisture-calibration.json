@@ -1,0 +1,8 @@
+{
+  "default": { "dry_raw": 3500, "wet_raw": 1550 },
+  "devices": {
+    "vermiculture-esp32": {
+      "0": { "dry_raw": 3500, "wet_raw": 1550 }
+    }
+  }
+}

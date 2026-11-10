@@ -3,9 +3,11 @@ package com.example.sensor;
 public class BusinessValidationStage {
 
     private final OutlierDetector outlierDetector;
+    private final MoistureCalibrations calibrations;
 
-    public BusinessValidationStage(OutlierDetector outlierDetector) {
-        this.outlierDetector = outlierDetector;
+    public BusinessValidationStage(MoistureCalibrations calibrations) {
+        this.outlierDetector = new OutlierDetector(calibrations);
+        this.calibrations = calibrations;
     }
 
     public EnrichedMeasurementEvent process(SensorMeasurementEvent event) {
@@ -13,7 +15,8 @@ public class BusinessValidationStage {
                 .map(r -> new EnrichedSensorReading(r, MeasurementConversions.fahrenheit(r.celsius())))
                 .toList();
         var moisture = event.moisture().stream()
-                .map(r -> new EnrichedMoistureReading(r, MeasurementConversions.expectedMoisturePercent(r.raw())))
+                .map(r -> new EnrichedMoistureReading(r,
+                        calibrations.forProbe(event.device(), r.index()).expectedPercent(r.raw())))
                 .toList();
         return new EnrichedMeasurementEvent(event, sensors, moisture, outlierDetector.detect(event));
     }

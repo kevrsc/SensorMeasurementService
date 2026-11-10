@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class OutlierDetectorTest {
 
-    private final OutlierDetector detector = new OutlierDetector();
+    private final OutlierDetector detector = new OutlierDetector(MoistureCalibrations.defaultOnly(new MoistureCalibration(3500, 1550)));
 
     @Test
     void flagsTemperatureAbove100F() {

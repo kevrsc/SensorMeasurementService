@@ -12,6 +12,12 @@ public class OutlierDetector {
     private static final int MAX_MOISTURE_PERCENT = 100;
     private static final int MOISTURE_PERCENT_TOLERANCE = 1;
 
+    private final MoistureCalibrations calibrations;
+
+    public OutlierDetector(MoistureCalibrations calibrations) {
+        this.calibrations = calibrations;
+    }
+
     public List<Outlier> detect(SensorMeasurementEvent event) {
         var outliers = new ArrayList<Outlier>();
         for (var reading : event.sensors()) {
@@ -26,7 +32,7 @@ public class OutlierDetector {
                 outliers.add(Outlier.moisture(reading.index(),
                         "percent " + reading.percent() + " is outside 0-100; probe needs recalibration"));
             }
-            var expectedPercent = MeasurementConversions.expectedMoisturePercent(reading.raw());
+            var expectedPercent = calibrations.forProbe(event.device(), reading.index()).expectedPercent(reading.raw());
             if (Math.abs(expectedPercent - reading.percent()) > MOISTURE_PERCENT_TOLERANCE) {
                 outliers.add(Outlier.moisture(reading.index(),
                         "percent " + reading.percent() + " does not match raw " + reading.raw()

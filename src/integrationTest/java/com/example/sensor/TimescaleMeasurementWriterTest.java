@@ -24,7 +24,7 @@ class TimescaleMeasurementWriterTest {
     private static final PostgreSQLContainer<?> TIMESCALE = new PostgreSQLContainer<>(
             DockerImageName.parse("timescale/timescaledb:latest-pg17").asCompatibleSubstituteFor("postgres"));
 
-    private static final BusinessValidationStage STAGE_2 = new BusinessValidationStage(new OutlierDetector());
+    private static final BusinessValidationStage STAGE_2 = new BusinessValidationStage(MoistureCalibrations.defaultOnly(new MoistureCalibration(3500, 1550)));
 
     private TimescaleMeasurementWriter writer() {
         return new TimescaleMeasurementWriter(TIMESCALE.getJdbcUrl(), TIMESCALE.getUsername(), TIMESCALE.getPassword());
