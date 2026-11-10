@@ -44,26 +44,45 @@ class OutlierDetectorTest {
     }
 
     @Test
-    void flagsMoistureAbove100PercentAsNeedingRecalibration() {
-        var event = eventWithMoisture(new MoistureReading(0, 35, 1258, 115));
+    void flagsRawWetterThanTheCalibratedWetLimitWithoutReportingTheCappedPercentAsAMismatch() {
+        var event = eventWithMoisture(new MoistureReading(0, 35, 1512, 100));
 
-        assertEquals(List.of(Outlier.moisture(0, "percent 115 is outside 0-100; probe needs recalibration")),
+        assertEquals(List.of(Outlier.moisture(0,
+                        "raw 1512 is wetter than the calibrated wet limit 1550; probe needs recalibration")),
                 detector.detect(event));
     }
 
     @Test
-    void flagsMoistureBelow0PercentAsNeedingRecalibration() {
-        var event = eventWithMoisture(new MoistureReading(0, 35, 3695, -10));
+    void flagsRawDrierThanTheCalibratedDryLimit() {
+        var event = eventWithMoisture(new MoistureReading(0, 35, 3600, 0));
 
-        assertEquals(List.of(Outlier.moisture(0, "percent -10 is outside 0-100; probe needs recalibration")),
+        assertEquals(List.of(Outlier.moisture(0,
+                        "raw 3600 is drier than the calibrated dry limit 3500; probe needs recalibration")),
                 detector.detect(event));
+    }
+
+    @Test
+    void acceptsRawExactlyAtTheCalibratedLimits() {
+        var event = eventWithMoisture(new MoistureReading(0, 35, 1550, 100), new MoistureReading(1, 34, 3500, 0));
+
+        assertEquals(List.of(), detector.detect(event));
     }
 
     @Test
     void flagsMoisturePercentThatDoesNotMatchRawCalibration() {
-        var event = eventWithMoisture(new MoistureReading(0, 35, 1300, 100));
+        var event = eventWithMoisture(new MoistureReading(0, 35, 2200, 83));
 
-        assertEquals(List.of(Outlier.moisture(0, "percent 100 does not match raw 1300 (expected 113); check device calibration")),
+        assertEquals(List.of(Outlier.moisture(0, "percent 83 does not match raw 2200 (expected 67); check device calibration")),
+                detector.detect(event));
+    }
+
+    @Test
+    void flagsBothRulesWhenRawIsBeyondTheLimitAndPercentIsWrong() {
+        var event = eventWithMoisture(new MoistureReading(0, 32, 104, 40));
+
+        assertEquals(List.of(
+                        Outlier.moisture(0, "raw 104 is wetter than the calibrated wet limit 1550; probe needs recalibration"),
+                        Outlier.moisture(0, "percent 40 does not match raw 104 (expected 100); check device calibration")),
                 detector.detect(event));
     }
 

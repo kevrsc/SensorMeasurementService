@@ -28,11 +28,17 @@ public class OutlierDetector {
             }
         }
         for (var reading : event.moisture()) {
-            if (reading.percent() < MIN_MOISTURE_PERCENT || reading.percent() > MAX_MOISTURE_PERCENT) {
-                outliers.add(Outlier.moisture(reading.index(),
-                        "percent " + reading.percent() + " is outside 0-100; probe needs recalibration"));
+            var calibration = calibrations.forProbe(event.device(), reading.index());
+            if (reading.raw() < calibration.wetRaw()) {
+                outliers.add(Outlier.moisture(reading.index(), "raw " + reading.raw()
+                        + " is wetter than the calibrated wet limit " + calibration.wetRaw() + "; probe needs recalibration"));
+            } else if (reading.raw() > calibration.dryRaw()) {
+                outliers.add(Outlier.moisture(reading.index(), "raw " + reading.raw()
+                        + " is drier than the calibrated dry limit " + calibration.dryRaw() + "; probe needs recalibration"));
             }
-            var expectedPercent = calibrations.forProbe(event.device(), reading.index()).expectedPercent(reading.raw());
+            // The board caps percent at 0-100, so compare against the capped expectation.
+            var expectedPercent = Math.clamp(calibration.expectedPercent(reading.raw()),
+                    MIN_MOISTURE_PERCENT, MAX_MOISTURE_PERCENT);
             if (Math.abs(expectedPercent - reading.percent()) > MOISTURE_PERCENT_TOLERANCE) {
                 outliers.add(Outlier.moisture(reading.index(),
                         "percent " + reading.percent() + " does not match raw " + reading.raw()
