@@ -67,7 +67,7 @@ services:
     build: .
     image: sensor-measurement-service
     container_name: sensor-ingest
-    command: ["com.kevrsc.sensor.IngestMain"]
+    command: ["com.kevrsc.sensor.app.IngestMain"]
     depends_on:
       kafka-init:
         condition: service_completed_successfully
@@ -89,7 +89,7 @@ services:
     build: .
     image: sensor-measurement-service
     container_name: sensor-pipeline
-    command: ["com.kevrsc.sensor.Main"]
+    command: ["com.kevrsc.sensor.app.Main"]
     depends_on:
       kafka-init:
         condition: service_completed_successfully

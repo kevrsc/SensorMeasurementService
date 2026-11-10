@@ -226,8 +226,8 @@ You can run either application from Gradle while the infrastructure stays in Doc
 docker compose up -d kafka kafka-init timescaledb
 docker compose stop ingest pipeline
 
-.\gradlew.bat run          # pipeline (com.kevrsc.sensor.Main)
-.\gradlew.bat runIngest    # ingest + dashboard (com.kevrsc.sensor.IngestMain) on :8080
+.\gradlew.bat run          # pipeline (com.kevrsc.sensor.app.Main)
+.\gradlew.bat runIngest    # ingest + dashboard (com.kevrsc.sensor.app.IngestMain) on :8080
 ```
 
 On the host the defaults point at `localhost:9092` and `localhost:5432`, so nothing needs configuring.
@@ -505,7 +505,7 @@ Then look at the message in Kafbat UI and at the rows in pgAdmin. To dead-letter
 ```powershell
 docker compose run --rm --no-deps `
   -v "C:\dev\vermiculture-sensors\server:/import:ro" `
-  ingest com.kevrsc.sensor.HistoryImportMain /import/readings.jsonl
+  ingest com.kevrsc.sensor.app.HistoryImportMain /import/readings.jsonl
 ```
 
 Re-running is safe for the database because of `ON CONFLICT DO NOTHING`, but every line is added to the Kafka topic again.
@@ -640,24 +640,26 @@ To restore into an empty database, use [the TimescaleDB restore procedure](https
 ├── data/                       # runtime data (git-ignored)
 └── src
     ├── main/java/com/kevrsc/sensor
-    │   ├── Main.java                         # pipeline entry point
-    │   ├── IngestMain.java                   # HTTP entry point (ingest + dashboard)
-    │   ├── HistoryImportMain.java            # one-off readings.jsonl importer
-    │   ├── MeasurementConsumer.java          # poll → stages → write → commit loop
-    │   ├── StructuralValidationStage.java    # stage 1 (SensorEventParser, StructuralValidator)
-    │   ├── BusinessValidationStage.java      # stage 2 (OutlierDetector, MoistureCalibrations)
-    │   ├── RetryingMeasurementWriter.java    # stage 3 retry/backoff
-    │   ├── TimescaleMeasurementWriter.java   # stage 3 JDBC writer
-    │   ├── MeasurementHistoryReader.java     # read side: rebuilds events from the tables
-    │   ├── ReadingsIngestHandler.java        # POST /readings
-    │   ├── ReadingsQueryHandler.java         # GET /, /history, /readings
-    │   ├── MethodRouter.java                 # dispatch by HTTP method
-    │   └── ...                               # records, config, DLQ failure handler
+    │   ├── app/                     # entry points: wiring and configuration only
+    │   │   ├── Main.java                  # pipeline
+    │   │   ├── IngestMain.java            # HTTP ingest + dashboard
+    │   │   └── HistoryImportMain.java     # one-off readings.jsonl importer
+    │   ├── event/                   # the posted event model (SensorMeasurementEvent, SensorReading, ...)
+    │   ├── kafka/                   # KafkaClientConfig (consumer, producer, ingest producer settings)
+    │   ├── pipeline/                # MeasurementConsumer (poll → stages → write → commit), DLQ failure handling
+    │   │   ├── structural/          # stage 1: SensorEventParser, StructuralValidator, StructuralValidationStage
+    │   │   ├── business/            # stage 2: BusinessValidationStage, OutlierDetector, enriched records
+    │   │   │   └── calibration/     #   moisture probe calibration and its JSON loader
+    │   │   └── persistence/         # stage 3 policy: MeasurementWriter, RetryingMeasurementWriter
+    │   ├── storage/                 # everything that knows the SQL schema: Flyway migrator,
+    │   │                            #   TimescaleMeasurementWriter, MeasurementHistoryReader
+    │   ├── http/                    # MethodRouter, ReadingsIngestHandler (POST), ReadingsQueryHandler (GET)
+    │   └── importer/                # JsonlHistoryPublisher
     ├── main/resources
-    │   ├── db/migration/                     # Flyway SQL
-    │   ├── moisture-calibration.json         # default probe calibration
-    │   ├── web/index.html                    # dashboard
-    │   └── logback.xml                       # logging (Kafka client logs at WARN)
-    ├── test/                                 # unit tests
-    └── integrationTest/                      # Testcontainers tests
+    │   ├── db/migration/            # Flyway SQL
+    │   ├── moisture-calibration.json  # default probe calibration
+    │   ├── web/index.html           # dashboard
+    │   └── logback.xml              # logging (Kafka client logs at WARN)
+    ├── test/                        # unit tests, same packages as the code they cover
+    └── integrationTest/             # Testcontainers tests (storage package)
 ```

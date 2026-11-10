@@ -4,7 +4,7 @@ plugins {
 }
 
 application {
-    mainClass = 'com.kevrsc.sensor.Main'
+    mainClass = 'com.kevrsc.sensor.app.Main'
 }
 
 group = 'com.kevrsc.sensor'
@@ -42,7 +42,7 @@ tasks.register('runIngest', JavaExec) {
     group = 'application'
     description = 'Runs the HTTP ingest that publishes ESP32 posts to Kafka.'
     classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'com.kevrsc.sensor.IngestMain'
+    mainClass = 'com.kevrsc.sensor.app.IngestMain'
 }
 
 testing {

@@ -11,4 +11,4 @@ WORKDIR /app
 COPY --from=build /src/build/install/sensor-measurement-service/lib lib
 EXPOSE 8080
 ENTRYPOINT ["java", "-cp", "/app/lib/*"]
-CMD ["com.kevrsc.sensor.IngestMain"]
+CMD ["com.kevrsc.sensor.app.IngestMain"]
