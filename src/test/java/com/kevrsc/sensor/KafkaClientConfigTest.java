@@ -33,4 +33,16 @@ class KafkaClientConfigTest {
         assertEquals(StringSerializer.class.getName(), props.get(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG));
         assertEquals(StringSerializer.class.getName(), props.get(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG));
     }
+
+    @Test
+    void ingestProducerGivesUpWithinAnHttpRequest() {
+        var props = KafkaClientConfig.ingestProducerProperties("broker:9092");
+
+        assertEquals("broker:9092", props.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+        assertEquals("all", props.get(ProducerConfig.ACKS_CONFIG));
+        assertEquals("true", props.get(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG));
+        assertEquals("5000", props.get(ProducerConfig.MAX_BLOCK_MS_CONFIG));
+        assertEquals("5000", props.get(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG));
+        assertEquals("10000", props.get(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG));
+    }
 }

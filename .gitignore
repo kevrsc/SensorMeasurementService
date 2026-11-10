@@ -4,3 +4,4 @@ build/
 *.iml
 out/
 dead-letter-failures.jsonl
+data/

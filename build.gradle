@@ -38,6 +38,13 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+tasks.register('runIngest', JavaExec) {
+    group = 'application'
+    description = 'Runs the HTTP ingest that publishes ESP32 posts to Kafka.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.kevrsc.sensor.IngestMain'
+}
+
 testing {
     suites {
         integrationTest(JvmTestSuite) {

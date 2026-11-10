@@ -1,0 +1,8 @@
+.gradle/
+build/
+.idea/
+out/
+*.iml
+readings.jsonl
+dead-letter-failures.jsonl
+data/

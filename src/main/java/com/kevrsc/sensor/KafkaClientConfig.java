@@ -33,4 +33,12 @@ public final class KafkaClientConfig {
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         return props;
     }
+
+    public static Properties ingestProducerProperties(String bootstrapServers) {
+        var props = producerProperties(bootstrapServers);
+        props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, "5000");
+        props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, "5000");
+        props.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, "10000");
+        return props;
+    }
 }

@@ -35,6 +35,27 @@ services:
         /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:19092 --create --if-not-exists --topic sensor-measurements --partitions 3 --replication-factor 1
         /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:19092 --create --if-not-exists --topic sensor-measurements.dlq --partitions 1 --replication-factor 1
 
+  ingest:
+    build: .
+    image: sensor-ingest
+    container_name: sensor-ingest
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      timescaledb:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      SENSOR_TOPIC: sensor-measurements
+      DB_URL: jdbc:postgresql://timescaledb:5432/sensors
+      DB_USER: sensors
+      DB_PASSWORD: sensors
+      INGEST_PORT: 8080
+      INGEST_ADVERTISED_HOST: ${INGEST_ADVERTISED_HOST:-}
+      TZ: ${TZ:-America/Los_Angeles}
+    ports:
+      - "${INGEST_HOST_PORT:-8080}:8080"
+
   timescaledb:
     image: timescale/timescaledb:latest-pg17
     container_name: sensor-timescaledb
@@ -45,12 +66,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - timescaledb-data:/var/lib/postgresql/data
+      - ./data/timescaledb:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sensors -d sensors"]
       interval: 10s
       timeout: 5s
       retries: 10
-
-volumes:
-  timescaledb-data:
