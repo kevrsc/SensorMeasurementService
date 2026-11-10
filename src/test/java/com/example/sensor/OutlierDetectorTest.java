@@ -15,14 +15,14 @@ class OutlierDetectorTest {
     void flagsTemperatureAbove100F() {
         var event = eventWithSensors(new SensorReading(2, "2800000000000003", 40.0));
 
-        assertEquals(List.of("sensors[2] temperature 104.0F is outside 0F-100F"), detector.detect(event));
+        assertEquals(List.of(Outlier.sensor(2, "temperature 104.0F is outside 0F-100F")), detector.detect(event));
     }
 
     @Test
     void flagsTemperatureBelow0F() {
         var event = eventWithSensors(new SensorReading(1, "2800000000000002", -20.0));
 
-        assertEquals(List.of("sensors[1] temperature -4.0F is outside 0F-100F"), detector.detect(event));
+        assertEquals(List.of(Outlier.sensor(1, "temperature -4.0F is outside 0F-100F")), detector.detect(event));
     }
 
     @Test
@@ -47,7 +47,7 @@ class OutlierDetectorTest {
     void flagsMoistureAbove100PercentAsNeedingRecalibration() {
         var event = eventWithMoisture(new MoistureReading(0, 35, 1258, 115));
 
-        assertEquals(List.of("moisture[0] percent 115 is outside 0-100; probe needs recalibration"),
+        assertEquals(List.of(Outlier.moisture(0, "percent 115 is outside 0-100; probe needs recalibration")),
                 detector.detect(event));
     }
 
@@ -55,7 +55,7 @@ class OutlierDetectorTest {
     void flagsMoistureBelow0PercentAsNeedingRecalibration() {
         var event = eventWithMoisture(new MoistureReading(0, 35, 3695, -10));
 
-        assertEquals(List.of("moisture[0] percent -10 is outside 0-100; probe needs recalibration"),
+        assertEquals(List.of(Outlier.moisture(0, "percent -10 is outside 0-100; probe needs recalibration")),
                 detector.detect(event));
     }
 
@@ -63,7 +63,7 @@ class OutlierDetectorTest {
     void flagsMoisturePercentThatDoesNotMatchRawCalibration() {
         var event = eventWithMoisture(new MoistureReading(0, 35, 1300, 100));
 
-        assertEquals(List.of("moisture[0] percent 100 does not match raw 1300 (expected 113); check device calibration"),
+        assertEquals(List.of(Outlier.moisture(0, "percent 100 does not match raw 1300 (expected 113); check device calibration")),
                 detector.detect(event));
     }
 

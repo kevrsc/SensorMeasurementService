@@ -32,7 +32,11 @@ public final class Main {
                 kafkaProducer,
                 deadLetterTopic,
                 new FileDeadLetterFailureHandler(failuresFile),
-                new StructuralValidationStage(new SensorEventParser(), new StructuralValidator()));
+                new StructuralValidationStage(new SensorEventParser(), new StructuralValidator()),
+                new BusinessValidationStage(new OutlierDetector()),
+                new RetryingMeasurementWriter(
+                        events -> LOG.info("Received {} enriched events; persistence not yet implemented", events.size()),
+                        6, Duration.ofSeconds(1), Duration.ofSeconds(30), Thread::sleep));
 
         var mainThread = Thread.currentThread();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
