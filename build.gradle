@@ -4,10 +4,10 @@ plugins {
 }
 
 application {
-    mainClass = 'com.example.sensor.Main'
+    mainClass = 'com.kevrsc.sensor.Main'
 }
 
-group = 'com.example.sensor'
+group = 'com.kevrsc.sensor'
 version = '0.1.0-SNAPSHOT'
 
 repositories {
