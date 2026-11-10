@@ -22,8 +22,14 @@ public final class Main {
         var topic = env("SENSOR_TOPIC", "sensor-measurements");
         var deadLetterTopic = env("SENSOR_DLQ_TOPIC", topic + ".dlq");
         var failuresFile = Path.of(env("DLQ_FAILURES_FILE", "dead-letter-failures.jsonl"));
-        LOG.info("Starting sensor-measurement-service: bootstrapServers={}, groupId={}, topic={}, deadLetterTopic={}, failuresFile={}",
-                bootstrapServers, groupId, topic, deadLetterTopic, failuresFile.toAbsolutePath());
+        var dbUrl = env("DB_URL", "jdbc:postgresql://localhost:5432/sensors");
+        var dbUser = env("DB_USER", "sensors");
+        var dbPassword = env("DB_PASSWORD", "sensors");
+        LOG.info("Starting sensor-measurement-service: bootstrapServers={}, groupId={}, topic={}, deadLetterTopic={}, failuresFile={}, dbUrl={}",
+                bootstrapServers, groupId, topic, deadLetterTopic, failuresFile.toAbsolutePath(), dbUrl);
+
+        DatabaseMigrator.migrate(dbUrl, dbUser, dbPassword);
+        LOG.info("Database schema is up to date");
 
         var kafkaConsumer = new KafkaConsumer<String, String>(KafkaClientConfig.consumerProperties(bootstrapServers, groupId));
         var kafkaProducer = new KafkaProducer<String, String>(KafkaClientConfig.producerProperties(bootstrapServers));
@@ -35,7 +41,7 @@ public final class Main {
                 new StructuralValidationStage(new SensorEventParser(), new StructuralValidator()),
                 new BusinessValidationStage(new OutlierDetector()),
                 new RetryingMeasurementWriter(
-                        events -> LOG.info("Received {} enriched events; persistence not yet implemented", events.size()),
+                        new TimescaleMeasurementWriter(dbUrl, dbUser, dbPassword),
                         6, Duration.ofSeconds(1), Duration.ofSeconds(30), Thread::sleep));
 
         var mainThread = Thread.currentThread();
