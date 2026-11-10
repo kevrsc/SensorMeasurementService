@@ -37,8 +37,9 @@ services:
 
   ingest:
     build: .
-    image: sensor-ingest
+    image: sensor-measurement-service
     container_name: sensor-ingest
+    command: ["com.kevrsc.sensor.IngestMain"]
     depends_on:
       kafka-init:
         condition: service_completed_successfully
@@ -55,6 +56,29 @@ services:
       TZ: ${TZ:-America/Los_Angeles}
     ports:
       - "${INGEST_HOST_PORT:-8080}:8080"
+
+  pipeline:
+    build: .
+    image: sensor-measurement-service
+    container_name: sensor-pipeline
+    command: ["com.kevrsc.sensor.Main"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      timescaledb:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      KAFKA_GROUP_ID: sensor-measurement-service
+      SENSOR_TOPIC: sensor-measurements
+      SENSOR_DLQ_TOPIC: sensor-measurements.dlq
+      DLQ_FAILURES_FILE: /app/dlq/dead-letter-failures.jsonl
+      DB_URL: jdbc:postgresql://timescaledb:5432/sensors
+      DB_USER: sensors
+      DB_PASSWORD: sensors
+      TZ: ${TZ:-America/Los_Angeles}
+    volumes:
+      - ./data/dlq:/app/dlq
 
   timescaledb:
     image: timescale/timescaledb:latest-pg17
