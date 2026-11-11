@@ -43,11 +43,14 @@ public final class ReadingsIngestHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try (exchange) {
-            if (!PATH.equals(exchange.getRequestURI().getPath())) {
+            var path = exchange.getRequestURI().getPath();
+            if (!PATH.equals(path)) {
+                LOG.warn("Rejected {} {}: not found", exchange.getRequestMethod(), path);
                 send(exchange, 404, "not found");
                 return;
             }
             if (!"POST".equals(exchange.getRequestMethod())) {
+                LOG.warn("Rejected {} {}: method not allowed", exchange.getRequestMethod(), path);
                 exchange.getResponseHeaders().set("Allow", "POST");
                 send(exchange, 405, "method not allowed");
                 return;
@@ -57,20 +60,24 @@ public final class ReadingsIngestHandler implements HttpHandler {
             try {
                 body = mapper.readTree(exchange.getRequestBody());
             } catch (JsonProcessingException e) {
+                LOG.warn("Rejected POST {}: expected JSON", path);
                 send(exchange, 400, "expected JSON");
                 return;
             }
             if (!(body instanceof ObjectNode reading)) {
+                LOG.warn("Rejected POST {}: expected a JSON object", path);
                 send(exchange, 400, "expected a JSON object");
                 return;
             }
 
             var receivedAt = reading.path("received_at");
-            if (!receivedAt.isTextual() || receivedAt.asText().isBlank()) {
-                reading.put("received_at", OffsetDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS)
-                        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-            }
             var device = reading.path("device").isTextual() ? reading.get("device").asText() : null;
+            if (!receivedAt.isTextual() || receivedAt.asText().isBlank()) {
+                var stamped = OffsetDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS)
+                        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+                reading.put("received_at", stamped);
+                LOG.debug("Stamped received_at {} on reading from {}", stamped, device);
+            }
 
             try {
                 var metadata = producer.send(new ProducerRecord<>(topic, device, mapper.writeValueAsString(reading)))

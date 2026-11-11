@@ -67,6 +67,7 @@ public final class IngestMain {
             probe.connect(new InetSocketAddress(probeAddress, 80));
             return probe.getLocalAddress().getHostAddress();
         } catch (IOException | RuntimeException e) {
+            LOG.warn("Could not detect a LAN address via {}; advertising 127.0.0.1", probeAddress, e);
             return "127.0.0.1";
         }
     }

@@ -5,6 +5,9 @@ import com.kevrsc.sensor.pipeline.business.EnrichedMeasurementEvent;
 import com.kevrsc.sensor.pipeline.business.Outlier;
 import com.kevrsc.sensor.pipeline.persistence.MeasurementWriter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,6 +16,8 @@ import java.sql.Types;
 import java.util.List;
 
 public class TimescaleMeasurementWriter implements MeasurementWriter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TimescaleMeasurementWriter.class);
 
     private static final String INSERT_SENSOR = """
             INSERT INTO sensor_readings (time, device, sensor_index, address, celsius, fahrenheit, outlier_reasons)
@@ -53,10 +58,15 @@ public class TimescaleMeasurementWriter implements MeasurementWriter {
                     addMoistureRows(db, moisture, enriched);
                     addStatusRow(status, enriched.event());
                 }
-                sensors.executeBatch();
-                moisture.executeBatch();
-                status.executeBatch();
+                var sensorCounts = count(sensors.executeBatch());
+                var moistureCounts = count(moisture.executeBatch());
+                var statusCounts = count(status.executeBatch());
                 db.commit();
+                LOG.debug("Batch of {} events: sensor inserted={} skipped={} unknown={}; moisture inserted={} skipped={} unknown={}; status inserted={} skipped={} unknown={}",
+                        events.size(),
+                        sensorCounts.inserted(), sensorCounts.skipped(), sensorCounts.unknown(),
+                        moistureCounts.inserted(), moistureCounts.skipped(), moistureCounts.unknown(),
+                        statusCounts.inserted(), statusCounts.skipped(), statusCounts.unknown());
             } catch (SQLException e) {
                 db.rollback();
                 throw e;
@@ -128,5 +138,24 @@ public class TimescaleMeasurementWriter implements MeasurementWriter {
                 .filter(o -> o.kind() == kind && o.index() == index)
                 .map(Outlier::reason)
                 .toArray(String[]::new);
+    }
+
+    private record RowCounts(int inserted, int skipped, int unknown) {
+    }
+
+    private static RowCounts count(int[] results) {
+        var inserted = 0;
+        var skipped = 0;
+        var unknown = 0;
+        for (var result : results) {
+            if (result > 0) {
+                inserted++;
+            } else if (result == 0) {
+                skipped++;
+            } else {
+                unknown++;
+            }
+        }
+        return new RowCounts(inserted, skipped, unknown);
     }
 }

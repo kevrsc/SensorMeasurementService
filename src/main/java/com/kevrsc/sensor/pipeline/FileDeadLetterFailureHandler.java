@@ -28,8 +28,8 @@ public class FileDeadLetterFailureHandler implements DeadLetterFailureHandler {
     @Override
     public synchronized void onFailure(
             ConsumerRecord<String, String> record, List<String> validationErrors, Exception failure) {
-        LOG.error("dead-letter publish failed for {}-{}@{}: {}",
-                record.topic(), record.partition(), record.offset(), failure.getMessage());
+        LOG.error("dead-letter publish failed for {}-{}@{} key={} errors={}",
+                record.topic(), record.partition(), record.offset(), record.key(), validationErrors, failure);
 
         var entry = new LinkedHashMap<String, Object>();
         entry.put("failed_at", Instant.now().toString());

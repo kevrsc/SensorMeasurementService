@@ -2,12 +2,16 @@ package com.kevrsc.sensor.http;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeSet;
 
 public final class MethodRouter implements HttpHandler {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodRouter.class);
 
     private final Map<String, HttpHandler> handlers;
     private final String allowed;
@@ -24,6 +28,7 @@ public final class MethodRouter implements HttpHandler {
             handler.handle(exchange);
             return;
         }
+        LOG.warn("Rejected {} {}: method not allowed", exchange.getRequestMethod(), exchange.getRequestURI().getPath());
         try (exchange) {
             exchange.getResponseHeaders().set("Allow", allowed);
             exchange.sendResponseHeaders(405, -1);

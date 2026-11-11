@@ -38,12 +38,17 @@ public class RetryingMeasurementWriter implements MeasurementWriter {
         for (int attempt = 1; ; attempt++) {
             try {
                 delegate.write(events);
+                if (attempt > 1) {
+                    LOG.info("Write succeeded on attempt {}/{} for {} events from {}",
+                            attempt, maxAttempts, events.size(), devices(events));
+                }
                 return;
             } catch (RuntimeException e) {
                 if (attempt >= maxAttempts) {
                     throw e;
                 }
-                LOG.warn("write attempt {}/{} failed; retrying in {}: {}", attempt, maxAttempts, backoff, e.getMessage());
+                LOG.warn("Write attempt {}/{} failed for {} events from {}; retrying in {}: {}",
+                        attempt, maxAttempts, events.size(), devices(events), backoff, causeMessage(e));
                 sleep(backoff, e);
                 backoff = min(backoff.multipliedBy(2), maxBackoff);
             }
@@ -62,5 +67,22 @@ public class RetryingMeasurementWriter implements MeasurementWriter {
 
     private static Duration min(Duration a, Duration b) {
         return a.compareTo(b) <= 0 ? a : b;
+    }
+
+    private static String devices(List<EnrichedMeasurementEvent> events) {
+        var devices = events.stream()
+                .map(event -> event.event().device())
+                .filter(device -> device != null && !device.isBlank())
+                .distinct()
+                .toList();
+        return devices.isEmpty() ? "(none)" : devices.toString();
+    }
+
+    private static String causeMessage(RuntimeException failure) {
+        var cause = failure.getCause();
+        if (cause != null && cause.getMessage() != null) {
+            return cause.getMessage();
+        }
+        return failure.getMessage();
     }
 }
