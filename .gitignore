@@ -5,3 +5,5 @@ build/
 out/
 dead-letter-failures.jsonl
 data/
+ringbufferhistory.txt
+.env
