@@ -3,22 +3,22 @@
     "sensors": [
         {
             "index": 0,
-            "address": "2800000000000001",
+            "address": "28107bd400000057",
             "celsius": 18.06
         },
         {
             "index": 1,
-            "address": "2800000000000002",
+            "address": "288201d3000000de",
             "celsius": 19.94
         },
         {
             "index": 2,
-            "address": "2800000000000003",
+            "address": "284df1d600000042",
             "celsius": 16.38
         },
         {
             "index": 3,
-            "address": "2800000000000004",
+            "address": "2813f8d500000004",
             "celsius": 17.25
         }
     ],

@@ -28,7 +28,7 @@ class SensorEventParserTest {
 
         assertEquals("vermiculture-esp32", event.device());
         assertEquals(4, event.sensors().size());
-        assertEquals(new SensorReading(1, "2800000000000002", 19.94), event.sensors().get(1));
+        assertEquals(new SensorReading(1, "288201d3000000de", 19.94), event.sensors().get(1));
         assertEquals(new MoistureReading(0, 35, 1879, 83), event.moisture().get(0));
         assertEquals(229504121L, event.status().uptimeMs());
         assertNull(event.status().keepaliveAgeMs());

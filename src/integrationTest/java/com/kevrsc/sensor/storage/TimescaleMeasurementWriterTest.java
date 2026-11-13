@@ -85,8 +85,8 @@ class TimescaleMeasurementWriterTest {
 
     private static SensorMeasurementEvent sampleEvent(String device) {
         return new SensorMeasurementEvent(device,
-                List.of(new SensorReading(0, "2800000000000001", 18.06),
-                        new SensorReading(2, "2800000000000003", 40.0)),
+                List.of(new SensorReading(0, "28107bd400000057", 18.06),
+                        new SensorReading(2, "284df1d600000042", 40.0)),
                 List.of(new MoistureReading(0, 35, 1879, 83)),
                 new DeviceStatus(229504121L, "POWERON", 3, -58, "192.168.1.20", 2, 255, 256L,
                         187372L, 146388L, "0123456789abcdeffedcba9876543210", "disabled", null, 4),

@@ -17,7 +17,7 @@ class StructuralValidationStageTest {
     void returnsValidResultForValidJson() {
         var result = stage.process("""
                 {"device": "vermiculture-esp32",
-                 "sensors": [{"index": 0, "address": "2800000000000001", "celsius": 18.06}],
+                 "sensors": [{"index": 0, "address": "28107bd400000057", "celsius": 18.06}],
                  "received_at": "2026-11-09T11:56:34-08:00"}
                 """);
 

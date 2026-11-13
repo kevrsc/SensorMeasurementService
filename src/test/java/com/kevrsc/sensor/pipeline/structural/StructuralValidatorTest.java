@@ -40,7 +40,7 @@ class StructuralValidatorTest {
 
     @Test
     void rejectsMissingReceivedAt() {
-        var event = event("vermiculture-esp32", List.of(new SensorReading(0, "2800000000000001", 18.06)), null);
+        var event = event("vermiculture-esp32", List.of(new SensorReading(0, "28107bd400000057", 18.06)), null);
 
         assertEquals(List.of("receivedAt is required"), validator.validate(event));
     }
@@ -55,15 +55,15 @@ class StructuralValidatorTest {
     @Test
     void rejectsDuplicateSensorIndex() {
         var event = event("vermiculture-esp32", List.of(
-                new SensorReading(0, "2800000000000001", 18.06),
-                new SensorReading(1, "2800000000000002", 19.94),
-                new SensorReading(1, "2800000000000003", 16.38)));
+                new SensorReading(0, "28107bd400000057", 18.06),
+                new SensorReading(1, "288201d3000000de", 19.94),
+                new SensorReading(1, "284df1d600000042", 16.38)));
 
         assertEquals(List.of("sensors[1] index is duplicated"), validator.validate(event));
     }
 
     private static SensorMeasurementEvent eventForDevice(String device) {
-        return event(device, List.of(new SensorReading(0, "2800000000000001", 18.06)));
+        return event(device, List.of(new SensorReading(0, "28107bd400000057", 18.06)));
     }
 
     private static SensorMeasurementEvent event(String device, List<SensorReading> sensors) {

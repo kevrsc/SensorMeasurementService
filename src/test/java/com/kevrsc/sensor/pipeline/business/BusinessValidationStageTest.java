@@ -22,7 +22,7 @@ class BusinessValidationStageTest {
     @Test
     void attachesOutliersToTheOriginalEvent() {
         var event = new SensorMeasurementEvent("vermiculture-esp32",
-                List.of(new SensorReading(2, "2800000000000003", 40.0)),
+                List.of(new SensorReading(2, "284df1d600000042", 40.0)),
                 List.of(new MoistureReading(0, 35, 1879, 83)),
                 null,
                 OffsetDateTime.parse("2026-11-09T11:56:34-08:00"));
@@ -51,7 +51,7 @@ class BusinessValidationStageTest {
 
     @Test
     void addsFahrenheitAndExpectedMoisturePercentMetadata() {
-        var sensor = new SensorReading(0, "2800000000000001", 18.06);
+        var sensor = new SensorReading(0, "28107bd400000057", 18.06);
         var probe = new MoistureReading(0, 35, 1879, 83);
         var event = new SensorMeasurementEvent("vermiculture-esp32", List.of(sensor), List.of(probe), null,
                 OffsetDateTime.parse("2026-11-09T11:56:34-08:00"));

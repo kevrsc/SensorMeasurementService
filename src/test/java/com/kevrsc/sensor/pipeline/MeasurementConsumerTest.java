@@ -116,7 +116,7 @@ class MeasurementConsumerTest {
     void enrichesValidEventsAndWritesThemBeforeCommitting() {
         kafka.addRecord(new ConsumerRecord<>(TOPIC, 0, 0L, "vermiculture-esp32", """
                 {"device": "vermiculture-esp32",
-                 "sensors": [{"index": 2, "address": "2800000000000003", "celsius": 40.0}],
+                 "sensors": [{"index": 2, "address": "284df1d600000042", "celsius": 40.0}],
                  "received_at": "2026-11-09T11:56:34-08:00"}
                 """));
         kafka.addRecord(new ConsumerRecord<>(TOPIC, 0, 1L, "vermiculture-esp32", "{\"device\": "));

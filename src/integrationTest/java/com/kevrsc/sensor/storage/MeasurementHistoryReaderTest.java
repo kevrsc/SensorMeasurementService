@@ -52,14 +52,14 @@ class MeasurementHistoryReaderTest {
     @Order(2)
     void rebuildsStoredEventsOldestFirst() {
         var withEverything = new SensorMeasurementEvent("vermiculture-esp32",
-                List.of(new SensorReading(0, "2800000000000001", 18.06),
-                        new SensorReading(1, "2800000000000002", 19.94)),
+                List.of(new SensorReading(0, "28107bd400000057", 18.06),
+                        new SensorReading(1, "288201d3000000de", 19.94)),
                 List.of(new MoistureReading(0, 35, 1879, 83)),
                 new DeviceStatus(229504121L, "POWERON", 3, -58, "192.168.1.20", 2, 255, 256L,
                         187372L, 146388L, "0123456789abcdeffedcba9876543210", "disabled", null, 4),
                 OffsetDateTime.parse("2026-11-09T11:56:34-08:00"));
         var sensorsOnly = new SensorMeasurementEvent("vermiculture-esp32",
-                List.of(new SensorReading(0, "2800000000000001", 18.5)),
+                List.of(new SensorReading(0, "28107bd400000057", 18.5)),
                 List.of(), null,
                 OffsetDateTime.parse("2026-11-09T11:41:34-08:00"));
         var statusOnly = new SensorMeasurementEvent("vermiculture-esp32",

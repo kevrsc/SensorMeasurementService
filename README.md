@@ -340,7 +340,7 @@ Example from `src/test/resources/esp32-sensor-event.json`:
 {
   "device": "vermiculture-esp32",
   "sensors": [
-    { "index": 0, "address": "2800000000000001", "celsius": 18.06 }
+    { "index": 0, "address": "28107bd400000057", "celsius": 18.06 }
   ],
   "moisture": [
     { "index": 0, "pin": 35, "raw": 1879, "percent": 83 }

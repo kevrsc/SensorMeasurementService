@@ -27,14 +27,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ReadingsQueryHandlerTest {
 
     private static final SensorMeasurementEvent EVENT = new SensorMeasurementEvent("vermiculture-esp32",
-            List.of(new SensorReading(0, "2800000000000001", 18.06)),
+            List.of(new SensorReading(0, "28107bd400000057", 18.06)),
             List.of(new MoistureReading(0, 35, 1879, 83)),
             new DeviceStatus(229504121L, "POWERON", 3, -58, "192.168.1.20", 2, 255, 256L,
                     187372L, 146388L, "0123456789abcdeffedcba9876543210", "disabled", null, 4),
             OffsetDateTime.parse("2026-11-09T11:56:34-08:00"));
 
     private static final String EVENT_JSON = "{\"device\":\"vermiculture-esp32\","
-            + "\"sensors\":[{\"index\":0,\"address\":\"2800000000000001\",\"celsius\":18.06}],"
+            + "\"sensors\":[{\"index\":0,\"address\":\"28107bd400000057\",\"celsius\":18.06}],"
             + "\"moisture\":[{\"index\":0,\"pin\":35,\"raw\":1879,\"percent\":83}],"
             + "\"status\":{\"uptime_ms\":229504121,\"reset_reason\":\"POWERON\",\"boot_count\":3,\"rssi_dbm\":-58,"
             + "\"ip\":\"192.168.1.20\",\"wifi_reconnects\":2,\"post_failures\":255,\"seq\":256,\"free_heap\":187372,"

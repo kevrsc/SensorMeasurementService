@@ -19,14 +19,14 @@ class OutlierDetectorTest {
 
     @Test
     void flagsTemperatureAbove100F() {
-        var event = eventWithSensors(new SensorReading(2, "2800000000000003", 40.0));
+        var event = eventWithSensors(new SensorReading(2, "284df1d600000042", 40.0));
 
         assertEquals(List.of(Outlier.sensor(2, "temperature 104.0F is outside 0F-100F")), detector.detect(event));
     }
 
     @Test
     void flagsTemperatureBelow0F() {
-        var event = eventWithSensors(new SensorReading(1, "2800000000000002", -20.0));
+        var event = eventWithSensors(new SensorReading(1, "288201d3000000de", -20.0));
 
         assertEquals(List.of(Outlier.sensor(1, "temperature -4.0F is outside 0F-100F")), detector.detect(event));
     }
@@ -34,8 +34,8 @@ class OutlierDetectorTest {
     @Test
     void treatsTemperatureBoundariesAsNormal() {
         var event = eventWithSensors(
-                new SensorReading(0, "2800000000000001", (0.0 - 32.0) * 5.0 / 9.0),
-                new SensorReading(1, "2800000000000002", (100.0 - 32.0) * 5.0 / 9.0));
+                new SensorReading(0, "28107bd400000057", (0.0 - 32.0) * 5.0 / 9.0),
+                new SensorReading(1, "288201d3000000de", (100.0 - 32.0) * 5.0 / 9.0));
 
         assertEquals(List.of(), detector.detect(event));
     }
@@ -43,8 +43,8 @@ class OutlierDetectorTest {
     @Test
     void roundsToTenthOfDegreeBeforeComparing() {
         var event = eventWithSensors(
-                new SensorReading(0, "2800000000000001", -17.78),
-                new SensorReading(1, "2800000000000002", 37.78));
+                new SensorReading(0, "28107bd400000057", -17.78),
+                new SensorReading(1, "288201d3000000de", 37.78));
 
         assertEquals(List.of(), detector.detect(event));
     }
