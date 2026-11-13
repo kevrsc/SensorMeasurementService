@@ -82,8 +82,11 @@ services:
       INGEST_PORT: 8080
       INGEST_ADVERTISED_HOST: ${INGEST_ADVERTISED_HOST:-}
       TZ: ${TZ:-America/Los_Angeles}
+      LOG_FILE: /app/logs/ingest.log
     ports:
       - "${INGEST_HOST_PORT:-8080}:8080"
+    volumes:
+      - ./data/logs:/app/logs
 
   pipeline:
     build: .
@@ -105,8 +108,10 @@ services:
       DB_USER: sensors
       DB_PASSWORD: sensors
       TZ: ${TZ:-America/Los_Angeles}
+      LOG_FILE: /app/logs/pipeline.log
     volumes:
       - ./data/dlq:/app/dlq
+      - ./data/logs:/app/logs
 
   timescaledb:
     image: timescale/timescaledb:latest-pg17

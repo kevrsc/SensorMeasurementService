@@ -207,6 +207,7 @@ docker compose stop ingest              # stop one service
 docker compose start ingest             # start it again
 docker compose down                     # remove containers and network (data in ./data is kept)
 docker compose logs -f pipeline         # follow one service's logs
+Get-Content data\logs\pipeline.log -Wait   # the same log, from the file on the host
 docker compose ps                       # status and health
 ```
 
@@ -256,6 +257,10 @@ PGADMIN_PASSWORD=change-me
 | `KAFKA_UI_PORT` | `8081` | kafka-ui | Host port, bound to 127.0.0.1 |
 | `PGADMIN_PORT` | `5050` | pgadmin | Host port, bound to 127.0.0.1 |
 | `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` | `admin@example.com` / `admin` | pgadmin | pgAdmin login. Only applied the first time pgAdmin creates `data/pgadmin`. |
+
+### Logging
+
+Both Java services log to the console and to a rolling file. `LOG_FILE` sets the file; it defaults to `data/logs/sensor.log`, relative to the working directory. Compose sets it to `/app/logs/ingest.log` and `/app/logs/pipeline.log`, and mounts `/app/logs` from `./data/logs`, so the files are on the host while the containers run. Files roll weekly or at 10 MB and are kept for 13 weeks (about 90 days). Give each process its own `LOG_FILE`; two processes writing one file corrupt its rollover.
 
 ### ingest (`IngestMain`)
 
@@ -505,6 +510,7 @@ Then look at the message in Kafbat UI and at the rows in pgAdmin. To dead-letter
 
 ```powershell
 docker compose run --rm --no-deps `
+  -e LOG_FILE=/app/logs/history-import.log `
   -v "C:\dev\vermiculture-sensors\server:/import:ro" `
   ingest com.kevrsc.sensor.app.HistoryImportMain /import/readings.jsonl
 ```
@@ -527,7 +533,8 @@ Run it on the host so `vermiculture.local` resolves and Kafka is reached at `loc
 From a container, use the board's LAN address. mDNS names do not resolve there, and the compose network supplies the Kafka brokers:
 
 ```powershell
-docker compose run --rm --no-deps ingest com.kevrsc.sensor.app.Esp32HistoryPullMain http://192.168.x.x
+docker compose run --rm --no-deps -e LOG_FILE=/app/logs/esp32-history-pull.log `
+  ingest com.kevrsc.sensor.app.Esp32HistoryPullMain http://192.168.x.x
 ```
 
 The stack should already be up. Re-running is safe for the database because of `ON CONFLICT DO NOTHING`, but every sample is added to the Kafka topic again. The request waits up to 5 minutes for the ring.
@@ -619,6 +626,7 @@ COMMIT;
 | `data/timescaledb/` | PostgreSQL data directory, bind-mounted | Yes |
 | `data/pgadmin/` | pgAdmin settings and saved passwords | Yes |
 | `data/dlq/dead-letter-failures.jsonl` | Events whose DLQ send failed | Yes |
+| `data/logs/` | Application logs: `ingest.log`, `pipeline.log`, rolled weekly or at 10 MB and kept 13 weeks | Yes |
 | Kafka log | Anonymous Docker volume of `sensor-kafka` | No. It survives `stop`/`start`, but after `down` a new container starts with empty topics. |
 
 `data/` is git-ignored. Deleting `data/timescaledb` deletes the measurement history.
@@ -682,7 +690,7 @@ To restore into an empty database, use [the TimescaleDB restore procedure](https
     │   ├── db/migration/            # Flyway SQL
     │   ├── moisture-calibration.json  # default probe calibration
     │   ├── web/index.html           # dashboard
-    │   └── logback.xml              # logging (Kafka client logs at WARN)
+    │   └── logback.xml              # console and rolling file logs (Kafka client logs at WARN)
     ├── test/                        # unit tests, same packages as the code they cover
     └── integrationTest/             # Testcontainers tests (storage package)
 ```
