@@ -28,6 +28,7 @@ Everything runs with Docker Compose. Java 21, Gradle (Groovy DSL), plain `kafka-
 - [Delivery guarantees and failure handling](#delivery-guarantees-and-failure-handling)
 - [Testing](#testing)
 - [Importing history from the Python server](#importing-history-from-the-python-server)
+- [Pulling history from the ESP32](#pulling-history-from-the-esp32)
 - [Using Kafbat UI (Kafka)](#using-kafbat-ui-kafka)
 - [Using pgAdmin (TimescaleDB)](#using-pgadmin-timescaledb)
 - [Data, persistence and backups](#data-persistence-and-backups)
@@ -512,6 +513,27 @@ Re-running is safe for the database because of `ON CONFLICT DO NOTHING`, but eve
 
 ---
 
+## Pulling history from the ESP32
+
+`Esp32HistoryPullMain` fetches `GET /history` from the board once and publishes each array element to `sensor-measurements`, keyed by `device`. The board already returns the same event shape the pipeline consumes. An optional second argument is a Unix timestamp, sent as `?after=`, and the board leaves out samples at or before that time. Nothing is saved between runs, so the next run pulls the ring again.
+
+Run it on the host so `vermiculture.local` resolves and Kafka is reached at `localhost:9092`:
+
+```powershell
+.\gradlew.bat pullEsp32History --args="http://vermiculture.local"
+.\gradlew.bat pullEsp32History --args="http://vermiculture.local 1731000000"
+```
+
+From a container, use the board's LAN address. mDNS names do not resolve there, and the compose network supplies the Kafka brokers:
+
+```powershell
+docker compose run --rm --no-deps ingest com.kevrsc.sensor.app.Esp32HistoryPullMain http://192.168.x.x
+```
+
+The stack should already be up. Re-running is safe for the database because of `ON CONFLICT DO NOTHING`, but every sample is added to the Kafka topic again. The request waits up to 5 minutes for the ring.
+
+---
+
 ## Using Kafbat UI (Kafka)
 
 Open <http://localhost:8081>. The cluster is named **sensors**. There's no login, because the UI only listens on localhost.
@@ -636,14 +658,15 @@ To restore into an empty database, use [the TimescaleDB restore procedure](https
 ├── Dockerfile                  # multi-stage: JDK 21 build → JRE 21 runtime, main class chosen by CMD
 ├── docker-compose.yml          # kafka, kafka-init, timescaledb, ingest, pipeline, kafka-ui, pgadmin
 ├── docker/pgadmin/servers.json # pre-registered pgAdmin server
-├── build.gradle                # java + application plugins, integrationTest suite, runIngest task
+├── build.gradle                # java + application plugins, integrationTest suite, runIngest and pullEsp32History tasks
 ├── data/                       # runtime data (git-ignored)
 └── src
     ├── main/java/com/kevrsc/sensor
     │   ├── app/                     # entry points: wiring and configuration only
     │   │   ├── Main.java                  # pipeline
-    │   │   ├── IngestMain.java            # HTTP ingest + dashboard
-    │   │   └── HistoryImportMain.java     # one-off readings.jsonl importer
+│   │   ├── IngestMain.java            # HTTP ingest + dashboard
+│   │   ├── HistoryImportMain.java     # one-off readings.jsonl importer
+│   │   └── Esp32HistoryPullMain.java  # one-off pull of the ESP32 /history ring
     │   ├── event/                   # the posted event model (SensorMeasurementEvent, SensorReading, ...)
     │   ├── kafka/                   # KafkaClientConfig (consumer, producer, ingest producer settings)
     │   ├── pipeline/                # MeasurementConsumer (poll → stages → write → commit), DLQ failure handling
@@ -654,7 +677,7 @@ To restore into an empty database, use [the TimescaleDB restore procedure](https
     │   ├── storage/                 # everything that knows the SQL schema: Flyway migrator,
     │   │                            #   TimescaleMeasurementWriter, MeasurementHistoryReader
     │   ├── http/                    # MethodRouter, ReadingsIngestHandler (POST), ReadingsQueryHandler (GET)
-    │   └── importer/                # JsonlHistoryPublisher
+    │   └── importer/                # JsonlHistoryPublisher, Esp32HistoryPublisher
     ├── main/resources
     │   ├── db/migration/            # Flyway SQL
     │   ├── moisture-calibration.json  # default probe calibration

@@ -45,6 +45,13 @@ tasks.register('runIngest', JavaExec) {
     mainClass = 'com.kevrsc.sensor.app.IngestMain'
 }
 
+tasks.register('pullEsp32History', JavaExec) {
+    group = 'application'
+    description = 'Pulls the ESP32 on-board history once and publishes it to Kafka.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.kevrsc.sensor.app.Esp32HistoryPullMain'
+}
+
 testing {
     suites {
         integrationTest(JvmTestSuite) {
